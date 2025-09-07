@@ -1,18 +1,21 @@
 # Play-Game-on-windsurf
 
-##  À propos du projet
+## About the Project
 
-**Arcade Games Catalog** est un catalogue interactif de mini-jeux d’arcade, accessible directement dans le navigateur. Il propose :
+Arcade Games Catalog is an interactive catalog of mini arcade games, directly accessible in the browser. It features:
+- An intuitive and responsive user interface (categories, filters, dynamic buttons)
+- Filters by game type (Action, Puzzle, Platformer, Shooter, Racing)
+- A dynamic loading module, allowing games to be displayed from a file
+- A simple navigation system: clicking “Play” gives immediate access to the selected game
 
-- Une interface utilisateur **intuitive et responsive** (catégories, filtres, boutons dynamiques)
-- Des filtres par **type de jeu** (Action, Puzzle, Plateforme, Shooter, Course)
-- Un module de **chargement dynamique**, permettant d’afficher les jeux depuis un fichier
-- Un système de navigation simple : cliquer sur **“Jouer”** permet d’accéder immédiatement au jeu concerné
-
-L’objectif est de **centraliser sous une même interface** une collection de jeux, pour les découvrir et les lancer facilement.
+The goal is to centralize a collection of games in a single interface, making them easy to explore and launch.
 
 ---
 
 ## 🚀 Démo
 
 👉 [Lancer le projet](https://01-Codex.github.io/Play-Game-on-windsurf/)
+
+---
+
+🔹 This project was generated using a Windsurf prompt, a solution by Viibe Coding

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade Games Catalog</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="app-title">
+                    <i class="fas fa-gamepad"></i>
+                    Arcade Catalog
+                </h1>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Rechercher un jeu..." class="search-input">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">Tous</button>
+                <button class="filter-btn" data-filter="action">Action</button>
+                <button class="filter-btn" data-filter="puzzle">Puzzle</button>
+                <button class="filter-btn" data-filter="platformer">Plateforme</button>
+                <button class="filter-btn" data-filter="shooter">Shooter</button>
+                <button class="filter-btn" data-filter="racing">Course</button>
+            </div>
+        </div>
+
+        <!-- Games Grid -->
+        <main class="games-container">
+            <div id="gamesGrid" class="games-grid">
+                <!-- Games will be populated by JavaScript -->
+            </div>
+        </main>
+
+        <!-- Game Detail Modal -->
+        <div id="gameModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="modal-body">
+                    <div class="game-image-container">
+                        <img id="modalGameImage" src="" alt="" class="modal-game-image">
+                        <div class="game-rating">
+                            <span id="modalGameRating"></span>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <div class="game-info">
+                        <h2 id="modalGameTitle"></h2>
+                        <div class="game-meta">
+                            <span class="game-genre" id="modalGameGenre"></span>
+                            <span class="game-year" id="modalGameYear"></span>
+                        </div>
+                        <p id="modalGameDescription" class="game-description"></p>
+                        <div class="game-details">
+                            <div class="detail-item">
+                                <i class="fas fa-users"></i>
+                                <span>Joueurs: <span id="modalGamePlayers"></span></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-clock"></i>
+                                <span>Durée: <span id="modalGameDuration"></span></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-trophy"></i>
+                                <span>Difficulté: <span id="modalGameDifficulty"></span></span>
+                            </div>
+                        </div>
+                        <button class="play-btn">
+                            <i class="fas fa-play"></i>
+                            Jouer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="loading-spinner hidden">
+            <div class="spinner"></div>
+            <p>Chargement des jeux...</p>
+        </div>
+    </div>
+
+    <script src="games-data.js"></script>
+    <script src="games/game-engine.js"></script>
+    <script src="games/pacman.js"></script>
+    <script src="games/tetris.js"></script>
+    <script src="games/space-invaders.js"></script>
+    <script src="games/snake.js"></script>
+    <script src="games/pong.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

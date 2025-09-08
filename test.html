@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Arcade Games</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .game {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .game h2 {
+            margin-top: 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #gameContainer {
+            width: 800px;
+            height: 600px;
+            margin: 20px 0;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test des jeux d'arcade</h1>
+    
+    <div id="gamesList">
+        <h2>Liste des jeux disponibles</h2>
+        <div class="game">
+            <h3>Pac-Man</h3>
+            <button onclick="startGame(1, 'Pac-Man')">Jouer à Pac-Man</button>
+        </div>
+        <div class="game">
+            <h3>Space Invaders</h3>
+            <button onclick="startGame(2, 'Space Invaders')">Jouer à Space Invaders</button>
+        </div>
+        <div class="game">
+            <h3>Tetris</h3>
+            <button onclick="startGame(3, 'Tetris')">Jouer à Tetris</button>
+        </div>
+        <div class="game">
+            <h3>Snake</h3>
+            <button onclick="startGame(4, 'Snake')">Jouer à Snake</button>
+        </div>
+        <div class="game">
+            <h3>Pong</h3>
+            <button onclick="startGame(5, 'Pong')">Jouer à Pong</button>
+        </div>
+        <div class="game">
+            <h3>Breakout</h3>
+            <button onclick="startGame(6, 'Breakout')">Jouer à Breakout</button>
+        </div>
+    </div>
+
+    <div id="gameContainer" style="display: none;">
+        <h2 id="gameTitle">Jeu en cours</h2>
+        <button onclick="stopGame()">Arrêter le jeu</button>
+        <div id="gameArea">
+            <!-- Le jeu sera chargé ici -->
+        </div>
+    </div>
+
+    <!-- Charger les scripts nécessaires -->
+    <script src="utils/visual-effects.js"></script>
+    <script src="utils/sound-manager.js"></script>
+    <script src="utils/score-manager.js"></script>
+    <script src="utils/pause-menu.js"></script>
+    <script src="games/game-engine.js"></script>
+    <script src="games/pacman.js"></script>
+    <script src="games/space-invaders.js"></script>
+    <script src="games/tetris.js"></script>
+    <script src="games/snake.js"></script>
+    <script src="games/pong.js"></script>
+    <script src="games/breakout.js"></script>
+
+    <script>
+        // Fonction pour démarrer un jeu
+        function startGame(gameId, gameTitle) {
+            console.log(`Démarrage du jeu: ${gameTitle} (ID: ${gameId})`);
+            
+            // Afficher le conteneur de jeu
+            document.getElementById('gameContainer').style.display = 'block';
+            document.getElementById('gameTitle').textContent = gameTitle;
+            
+            // Masquer la liste des jeux
+            document.getElementById('gamesList').style.display = 'none';
+            
+            // Démarrer le jeu via le gameManager
+            if (window.gameManager) {
+                console.log('GameManager trouvé, démarrage du jeu...');
+                window.gameManager.openGame(gameId, gameTitle);
+            } else {
+                console.error('Erreur: GameManager non trouvé');
+                alert('Erreur: Impossible de démarrer le jeu. Le gestionnaire de jeux n\'est pas chargé.');
+            }
+        }
+        
+        // Fonction pour arrêter le jeu en cours
+        function stopGame() {
+            // Cacher le conteneur de jeu
+            document.getElementById('gameContainer').style.display = 'none';
+            
+            // Afficher la liste des jeux
+            document.getElementById('gamesList').style.display = 'block';
+            
+            // Arrêter le jeu via le gameManager
+            if (window.gameManager) {
+                window.gameManager.closeGame();
+            }
+        }
+        
+        // Vérifier que tout est chargé
+        window.addEventListener('load', function() {
+            console.log('Page chargée');
+            console.log('GameManager:', window.gameManager);
+            console.log('SoundManager:', window.soundManager);
+            console.log('ScoreManager:', window.scoreManager);
+            console.log('VisualEffects:', window.visualEffects);
+        });
+    </script>
+</body>
+</html>

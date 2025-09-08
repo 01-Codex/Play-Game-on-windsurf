@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Debug - Modal et GameManager</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-btn { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100vh; background-color: rgba(0, 0, 0, 0.8); }
+        .modal-content { background-color: white; margin: 0; padding: 20px; border-radius: 20px; width: 90%; max-width: 600px; max-height: 90vh; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .close { position: absolute; top: 15px; right: 20px; color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .log { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; margin: 10px 0; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>Test de Débogage - Arcade Games</h1>
+    
+    <div>
+        <button class="test-btn" onclick="testModal()">Test Modal Centrage</button>
+        <button class="test-btn" onclick="testGameManager()">Test GameManager</button>
+        <button class="test-btn" onclick="testScripts()">Test Chargement Scripts</button>
+        <button class="test-btn" onclick="clearLog()">Effacer Log</button>
+    </div>
+    
+    <div id="log" class="log">
+        <strong>Console de Debug:</strong><br>
+    </div>
+    
+    <!-- Test Modal -->
+    <div id="testModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeTestModal()">&times;</span>
+            <h2>Test Modal</h2>
+            <p>Cette modal devrait être parfaitement centrée.</p>
+            <button class="test-btn" id="testPlayBtn">Test Bouton Jouer</button>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function testModal() {
+            log('🔍 Test d\'ouverture de modal...');
+            const modal = document.getElementById('testModal');
+            modal.style.display = 'block';
+            log('✅ Modal ouverte - vérifiez si elle est centrée');
+        }
+
+        function closeTestModal() {
+            document.getElementById('testModal').style.display = 'none';
+            log('❌ Modal fermée');
+        }
+
+        function testGameManager() {
+            log('🔍 Test de GameManager...');
+            
+            if (typeof GameManager !== 'undefined') {
+                log('✅ Classe GameManager disponible');
+                
+                if (window.gameManager) {
+                    log('✅ Instance window.gameManager existe');
+                    log('🎮 Type: ' + typeof window.gameManager);
+                } else {
+                    log('❌ Instance window.gameManager n\'existe pas');
+                    try {
+                        window.gameManager = new GameManager();
+                        log('✅ GameManager créé manuellement');
+                    } catch (e) {
+                        log('❌ Erreur création GameManager: ' + e.message);
+                    }
+                }
+            } else {
+                log('❌ Classe GameManager non disponible');
+            }
+        }
+
+        function testScripts() {
+            log('🔍 Test de chargement des scripts...');
+            
+            const scripts = [
+                'gamesData',
+                'GameManager', 
+                'GameEngine',
+                'PacManGame',
+                'TetrisGame',
+                'SnakeGame'
+            ];
+            
+            scripts.forEach(script => {
+                if (typeof window[script] !== 'undefined') {
+                    log('✅ ' + script + ' chargé');
+                } else {
+                    log('❌ ' + script + ' non chargé');
+                }
+            });
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '<strong>Console de Debug:</strong><br>';
+        }
+
+        // Test du bouton jouer
+        document.getElementById('testPlayBtn').addEventListener('click', function() {
+            log('🔘 Clic sur bouton test détecté');
+            testGameManager();
+        });
+
+        // Auto-test au chargement
+        window.addEventListener('load', function() {
+            log('🚀 Page de test chargée');
+            setTimeout(() => {
+                testScripts();
+                testGameManager();
+            }, 1000);
+        });
+    </script>
+    
+    <!-- Chargement des scripts du jeu -->
+    <script src="games-data.js"></script>
+    <script src="games/game-engine.js"></script>
+    <script src="games/pacman.js"></script>
+    <script src="games/tetris.js"></script>
+    <script src="games/space-invaders.js"></script>
+    <script src="games/snake.js"></script>
+    <script src="games/pong.js"></script>
+    <script src="games/donkey-kong.js"></script>
+    <script src="games/street-fighter.js"></script>
+    <script src="games/breakout.js"></script>
+    <script src="games/frogger.js"></script>
+    <script src="games/centipede.js"></script>
+    <script src="games/asteroids.js"></script>
+    <script src="games/galaga.js"></script>
+</body>
+</html>

@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arcade Games Catalog</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles/splash-screen.css">
+    <link rel="stylesheet" href="styles/pause-menu.css">
+    <link rel="stylesheet" href="styles/visual-effects.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -48,38 +51,55 @@
             <div class="modal-content">
                 <span class="close">&times;</span>
                 <div class="modal-body">
-                    <div class="game-image-container">
-                        <img id="modalGameImage" src="" alt="" class="modal-game-image">
-                        <div class="game-rating">
-                            <span id="modalGameRating"></span>
-                            <i class="fas fa-star"></i>
-                        </div>
-                    </div>
-                    <div class="game-info">
-                        <h2 id="modalGameTitle"></h2>
-                        <div class="game-meta">
-                            <span class="game-genre" id="modalGameGenre"></span>
-                            <span class="game-year" id="modalGameYear"></span>
-                        </div>
-                        <p id="modalGameDescription" class="game-description"></p>
-                        <div class="game-details">
-                            <div class="detail-item">
-                                <i class="fas fa-users"></i>
-                                <span>Joueurs: <span id="modalGamePlayers"></span></span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-clock"></i>
-                                <span>Durée: <span id="modalGameDuration"></span></span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-trophy"></i>
-                                <span>Difficulté: <span id="modalGameDifficulty"></span></span>
+                    <div class="modal-content-wrapper">
+                        <!-- Colonne de gauche - Image du jeu -->
+                        <div class="game-image-container">
+                            <img id="modalGameImage" src="" alt="" class="modal-game-image">
+                            <div class="game-rating">
+                                <i class="fas fa-star"></i>
+                                <span id="modalGameRating"></span>
                             </div>
                         </div>
-                        <button class="play-btn">
-                            <i class="fas fa-play"></i>
-                            Jouer
-                        </button>
+                        
+                        <!-- Colonne de droite - Détails du jeu -->
+                        <div class="game-info">
+                            <div class="game-header">
+                                <h2 id="modalGameTitle"></h2>
+                                <div class="game-meta">
+                                    <span class="game-genre" id="modalGameGenre"></span>
+                                    <span class="game-year" id="modalGameYear"></span>
+                                </div>
+                            </div>
+                            
+                            <!-- Contenu défilable -->
+                            <div class="scrollable-content">
+                                <div class="game-content">
+                                    <p id="modalGameDescription" class="game-description"></p>
+                                    <div class="game-details">
+                                        <div class="detail-item">
+                                            <i class="fas fa-users"></i>
+                                            <span>Joueurs: <span id="modalGamePlayers"></span></span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <i class="fas fa-clock"></i>
+                                            <span>Durée: <span id="modalGameDuration"></span></span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <i class="fas fa-trophy"></i>
+                                            <span>Difficulté: <span id="modalGameDifficulty"></span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Bouton en dehors du contenu défilable pour qu'il reste visible -->
+                                <div class="game-actions">
+                                    <button class="play-btn">
+                                        <i class="fas fa-play"></i>
+                                        Jouer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -92,13 +112,26 @@
         </div>
     </div>
 
-    <script src="games-data.js"></script>
+    <!-- Chargement des utilitaires en premier -->
+    <script src="utils/visual-effects.js"></script>
+    <script src="utils/sound-manager.js"></script>
+    <script src="utils/score-manager.js"></script>
+    <script src="utils/pause-menu.js"></script>
+    
+    <!-- Chargement du moteur de jeu -->
     <script src="games/game-engine.js"></script>
+    
+    <!-- Chargement des jeux -->
     <script src="games/pacman.js"></script>
-    <script src="games/tetris.js"></script>
     <script src="games/space-invaders.js"></script>
+    <script src="games/tetris.js"></script>
     <script src="games/snake.js"></script>
     <script src="games/pong.js"></script>
+    <script src="games/breakout.js"></script>
+    
+    <!-- Chargement des données et de l'application -->
+    <script src="games-data.js"></script>
+    <script src="js/splash-screen.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

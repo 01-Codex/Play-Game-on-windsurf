@@ -5,6 +5,7 @@ class ArcadeGamesCatalog {
         this.filteredGames = [...this.games];
         this.currentFilter = 'all';
         this.searchTerm = '';
+        this.currentGameId = null;
         
         this.init();
     }
@@ -35,10 +36,11 @@ class ArcadeGamesCatalog {
 
         // Filtres par genre
         const filterButtons = document.querySelectorAll('.filter-btn');
-        filterButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        filterButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
                 // Retirer la classe active de tous les boutons
-                filterButtons.forEach(b => b.classList.remove('active'));
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                
                 // Ajouter la classe active au bouton cliqué
                 e.target.classList.add('active');
                 
@@ -47,16 +49,21 @@ class ArcadeGamesCatalog {
             });
         });
 
-        // Modal
-        const modal = document.getElementById('gameModal');
-        const closeBtn = document.querySelector('.close');
-        
-        closeBtn.addEventListener('click', () => {
+        // Fermeture de modal avec Échap
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeModal();
+            }
+        });
+
+        // Fermeture de modal avec le bouton X
+        document.querySelector('.close').addEventListener('click', () => {
             this.closeModal();
         });
 
-        window.addEventListener('click', (e) => {
-            if (e.target === modal) {
+        // Fermeture de modal en cliquant sur l'arrière-plan
+        document.getElementById('gameModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('gameModal')) {
                 this.closeModal();
             }
         });
@@ -142,6 +149,9 @@ class ArcadeGamesCatalog {
         const game = this.games.find(g => g.id === gameId);
         if (!game) return;
 
+        // Récupérer la référence à la modal
+        const modal = document.getElementById('gameModal');
+        
         // Remplir les données de la modal
         document.getElementById('modalGameImage').src = game.image;
         document.getElementById('modalGameImage').alt = game.title;
@@ -156,25 +166,84 @@ class ArcadeGamesCatalog {
 
         // Stocker l'ID du jeu actuel
         this.currentGameId = gameId;
-
+        
+        // Bloquer le défilement de la page de fond
+        document.body.classList.add('modal-open');
+        
         // Afficher la modal
-        document.getElementById('gameModal').style.display = 'block';
-        document.body.style.overflow = 'hidden';
+        if (modal) {
+            modal.style.display = 'block';
+            // Forcer un reflow pour l'animation
+            void modal.offsetHeight;
+            // Activer l'animation
+            modal.classList.add('open');
+        }
     }
 
     closeModal() {
-        document.getElementById('gameModal').style.display = 'none';
-        document.body.style.overflow = 'auto';
-        this.currentGameId = null;
+        const modal = document.getElementById('gameModal');
+        
+        // Démarrer l'animation de fermeture
+        if (modal) {
+            modal.classList.remove('open');
+            modal.classList.add('closing');
+            
+            // Masquer la modal après l'animation
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.classList.remove('closing');
+                
+                // Restaurer le défilement du body
+                document.body.classList.remove('modal-open');
+                
+                // Réinitialiser l'ID du jeu actuel
+                this.currentGameId = null;
+            }, 300); // Correspond à la durée de l'animation CSS
+        }
     }
 
     playGame() {
         const game = this.games.find(g => g.id === this.currentGameId);
-        if (!game) return;
+        if (!game) {
+            this.showNotification('Jeu non trouvé', 'error');
+            return;
+        }
 
-        // Lancer le jeu réel
-        this.closeModal();
-        window.gameManager.openGame(game.id, game.title);
+        // Vérifier que le gestionnaire de jeux est disponible
+        if (!window.gameManager) {
+            this.showNotification('Le gestionnaire de jeux n\'est pas encore prêt. Veuillez réessayer.', 'error');
+            console.error('Erreur: gameManager non disponible');
+            return;
+        }
+
+        try {
+            // Fermer la modal
+            this.closeModal();
+            
+            // Lancer le jeu
+            window.gameManager.openGame(game.id, game.title);
+            
+            // Jouer un son de démarrage
+            if (window.soundManager) {
+                window.soundManager.playSound('select');
+            }
+        } catch (error) {
+            console.error('Erreur lors du lancement du jeu:', error);
+            this.showNotification('Une erreur est survenue lors du lancement du jeu', 'error');
+        }
+    }
+
+    // Méthodes utilitaires manquantes
+    getRandomGame() {
+        if (this.games.length === 0) return null;
+        const randomIndex = Math.floor(Math.random() * this.games.length);
+        return this.games[randomIndex];
+    }
+
+    getTopRatedGames(limit = 5) {
+        return [...this.games]
+            .sort((a, b) => b.rating - a.rating)
+            .slice(0, limit);
     }
 
     showNotification(message, type = 'info') {
@@ -288,20 +357,45 @@ class ArcadeGamesCatalog {
 }
 
 // Initialiser l'application quand le DOM est chargé
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
     // Afficher le spinner de chargement
     document.getElementById('loadingSpinner').classList.remove('hidden');
     
-    // Simuler un temps de chargement pour l'effet
-    setTimeout(() => {
-        window.catalog = new ArcadeGamesCatalog();
-        
-        // Afficher les statistiques dans la console pour le développement
-        console.log('📊 Statistiques du catalogue:', catalog.getStats());
-        console.log('🎮 Jeu aléatoire:', catalog.getRandomGame());
-        console.log('⭐ Top 5 des jeux:', catalog.getTopRatedGames());
-    }, 1000);
-});
+    // Vérifier si le gestionnaire de jeux est prêt
+    const checkGameManager = () => {
+        if (window.gameManager) {
+            // Le gestionnaire de jeux est prêt, cacher le spinner de chargement
+            document.getElementById('loadingSpinner')?.classList.add('hidden');
+        } else {
+            // Réessayer après un court délai
+            setTimeout(checkGameManager, 100);
+        }
+    };
+    
+    // Démarrer la vérification
+    checkGameManager();
+}
+
+// Initialiser l'application
+const initApplication = () => {
+    // Créer une seule instance du catalogue
+    const catalogInstance = new ArcadeGamesCatalog();
+    
+    // Exposer l'instance via window.catalog et window.arcadeApp
+    window.catalog = catalogInstance;
+    window.arcadeApp = catalogInstance;
+    
+    // Initialiser l'application
+    initApp();
+};
+
+// Attendre que le DOM soit chargé
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApplication);
+} else {
+    // Si le DOM est déjà chargé, initialiser immédiatement
+    initApplication();
+}
 
 // Fonctions utilitaires globales
 window.showGameStats = () => {

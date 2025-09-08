@@ -116,11 +116,150 @@ class GameEngine {
 }
 
 // Gestionnaire de jeux
-class GameManager {
+window.GameManager = class GameManager {
     constructor() {
         this.currentGame = null;
         this.gameContainer = null;
+        this.currentGameId = null;
+        this.currentGameTitle = '';
+        this.isPaused = false;
+        this.pauseMenu = null;
+        this.visualEffects = visualEffects; // Référence au gestionnaire d'effets visuels
         this.setupGameContainer();
+        this.initPauseMenu();
+        this.initVisualEffects();
+        soundManager.playMusic();
+    }
+
+    initPauseMenu() {
+        // Initialiser le menu pause
+        this.pauseMenu = new PauseMenu(this);
+    }
+    
+    /**
+     * Initialise les éléments pour les effets visuels
+     */
+    initVisualEffects() {
+        // Créer l'élément pour le flash d'écran
+        this.screenFlash = document.createElement('div');
+        this.screenFlash.className = 'screen-flash';
+        document.body.appendChild(this.screenFlash);
+        
+        // Créer l'élément pour la transition entre les écrans
+        this.screenTransition = document.createElement('div');
+        this.screenTransition.className = 'screen-transition';
+        document.body.appendChild(this.screenTransition);
+        
+        // Initialiser les écouteurs d'événements pour les boutons
+        this.setupButtonEffects();
+    }
+    
+    /**
+     * Configure les effets pour les boutons
+     */
+    setupButtonEffects() {
+        // Effet de particules au survol des boutons
+        document.addEventListener('mouseover', (e) => {
+            const button = e.target.closest('button');
+            if (button && !button.classList.contains('no-particle-effect')) {
+                this.addButtonHoverEffect(button);
+            }
+        });
+        
+        // Effet de clic sur les boutons
+        document.addEventListener('click', (e) => {
+            const button = e.target.closest('button');
+            if (button) {
+                this.addButtonClickEffect(button);
+            }
+        });
+    }
+    
+    /**
+     * Ajoute un effet de survol à un bouton
+     * @param {HTMLElement} button - L'élément bouton
+     */
+    addButtonHoverEffect(button) {
+        // Empêcher les effets multiples
+        if (button.classList.contains('button-hover-effect')) return;
+        
+        button.classList.add('button-hover-effect');
+        
+        // Créer un conteneur pour les particules
+        const particles = document.createElement('div');
+        particles.className = 'button-particles';
+        button.appendChild(particles);
+        
+        // Créer des particules autour du bouton
+        const particleCount = 8;
+        const rect = button.getBoundingClientRect();
+        
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (i / particleCount) * Math.PI * 2;
+            const distance = Math.random() * 20 + 10;
+            const x = Math.cos(angle) * distance + rect.width / 2;
+            const y = Math.sin(angle) * distance + rect.height / 2;
+            
+            this.visualEffects.createParticles(
+                rect.left + x,
+                rect.top + y,
+                {
+                    count: 2,
+                    color: '#00D1B2',
+                    minSpeed: 0.5,
+                    maxSpeed: 1.5,
+                    size: 2,
+                    life: 1,
+                    spread: 180,
+                    gravity: 0.1
+                }
+            );
+        }
+        
+        // Supprimer la classe après l'animation
+        setTimeout(() => {
+            button.classList.remove('button-hover-effect');
+            if (particles.parentNode === button) {
+                button.removeChild(particles);
+            }
+        }, 500);
+    }
+    
+    /**
+     * Ajoute un effet de clic à un bouton
+     * @param {HTMLElement} button - L'élément bouton
+     */
+    addButtonClickEffect(button) {
+        // Empêcher les effets multiples
+        if (button.classList.contains('button-click-effect')) return;
+        
+        button.classList.add('button-click-effect');
+        
+        // Créer un effet de vague
+        const rect = button.getBoundingClientRect();
+        this.visualEffects.createParticles(
+            rect.left + rect.width / 2,
+            rect.top + rect.height / 2,
+            {
+                count: 10,
+                color: '#FFFFFF',
+                minSpeed: 1,
+                maxSpeed: 3,
+                size: 3,
+                life: 0.8,
+                spread: 360,
+                gravity: 0.2,
+                fade: true
+            }
+        );
+        
+        // Ajouter une classe pour l'animation de clic
+        button.classList.add('clicked');
+        
+        // Supprimer la classe après l'animation
+        setTimeout(() => {
+            button.classList.remove('button-click-effect', 'clicked');
+        }, 300);
     }
 
     setupGameContainer() {
@@ -139,10 +278,12 @@ class GameManager {
                     </div>
                 </div>
                 <div class="game-area">
-                    <canvas id="gameCanvas"></canvas>
-                    <div id="gameUI" class="game-ui">
-                        <div class="score">Score: <span id="scoreDisplay">0</span></div>
-                        <div id="gameInstructions" class="instructions"></div>
+                    <div class="game-canvas-container">
+                        <canvas id="gameCanvas"></canvas>
+                        <div id="gameUI" class="game-ui">
+                            <div class="score">Score: <span id="scoreDisplay">0</span></div>
+                            <div id="gameInstructions" class="instructions"></div>
+                        </div>
                     </div>
                 </div>
                 <div id="gameOverScreen" class="game-over hidden">
@@ -173,16 +314,18 @@ class GameManager {
 
             .game-modal-content {
                 background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-                margin: 2% auto;
+                margin: 1% auto;
                 padding: 0;
                 border-radius: 15px;
-                width: 95%;
-                max-width: 900px;
-                height: 90vh;
+                width: 98%;
+                max-width: 1200px;
+                height: 98vh;
+                max-height: 100%;
                 display: flex;
                 flex-direction: column;
                 color: white;
                 overflow: hidden;
+                position: relative;
             }
 
             .game-header {
@@ -219,19 +362,32 @@ class GameManager {
 
             .game-area {
                 flex: 1;
+                position: relative;
                 display: flex;
-                padding: 1rem;
-                gap: 1rem;
-                align-items: center;
                 justify-content: center;
+                align-items: center;
+                overflow: auto;
+                padding: 10px;
+            }
+
+            .game-canvas-container {
+                position: relative;
+                max-width: 100%;
+                max-height: 100%;
+                aspect-ratio: 4/3;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
 
             #gameCanvas {
-                border: 2px solid rgba(255,255,255,0.3);
-                border-radius: 10px;
-                background: #000;
+                background-color: #000;
+                display: block;
                 max-width: 100%;
                 max-height: 100%;
+                width: auto !important;
+                height: auto !important;
+                object-fit: contain;
             }
 
             .game-ui {
@@ -337,50 +493,156 @@ class GameManager {
 
     setupGameControls() {
         document.getElementById('closeGameBtn').addEventListener('click', () => {
+            soundManager.playSound('click');
             this.closeGame();
         });
 
         document.getElementById('pauseBtn').addEventListener('click', () => {
-            this.togglePause();
+            soundManager.playSound('click');
+            if (this.currentGame) {
+                if (this.currentGame.isRunning) {
+                    this.currentGame.stop();
+                    document.getElementById('pauseBtn').textContent = '▶️';
+                } else {
+                    this.currentGame.start();
+                    document.getElementById('pauseBtn').textContent = '⏸️';
+                }
+            }
         });
 
         document.getElementById('restartBtn').addEventListener('click', () => {
-            this.restartGame();
+            soundManager.playSound('click');
+            if (this.currentGame) {
+                this.restartGame();
+            }
         });
 
         document.getElementById('playAgainBtn').addEventListener('click', () => {
-            this.restartGame();
+            soundManager.playSound('click');
+            if (this.currentGame) {
+                this.restartGame();
+            }
         });
     }
 
     openGame(gameId, gameTitle) {
+        soundManager.playSound('select');
+        this.currentGameId = gameId;
+        this.currentGameTitle = gameTitle;
+
+        // Mettre à jour le titre du jeu
         document.getElementById('gameTitle').textContent = gameTitle;
+
+        // Afficher le conteneur de jeu
         this.gameContainer.style.display = 'block';
         document.body.style.overflow = 'hidden';
 
+        // Redimensionner le canevas avant d'initialiser le jeu
+        this.resizeGameCanvas();
+        window.addEventListener('resize', this.resizeGameCanvas.bind(this));
+
         // Initialiser le jeu spécifique
         this.initializeGame(gameId);
+
+        // Cacher l'écran de fin de jeu s'il est visible
+        document.getElementById('gameOverScreen').classList.add('hidden');
+
+        // Mettre à jour le bouton de pause
+        document.getElementById('pauseBtn').textContent = '⏸️';
+        this.isPaused = false;
+
+        // Afficher le meilleur score
+        this.updateHighScoreDisplay();
+    }
+
+    resizeGameCanvas() {
+        const canvas = document.getElementById('gameCanvas');
+        if (!canvas) return;
+
+        const container = canvas.closest('.game-canvas-container');
+        if (!container) return;
+
+        // Taille maximale disponible dans le conteneur
+        const maxWidth = container.clientWidth;
+        const maxHeight = container.clientHeight;
+
+        // Calculer le ratio d'aspect du jeu (par défaut 4:3)
+        const gameAspectRatio = 4 / 3;
+        const containerAspectRatio = maxWidth / maxHeight;
+
+        let width, height;
+
+        if (containerAspectRatio > gameAspectRatio) {
+            // Conteneur plus large que le jeu
+            height = maxHeight;
+            width = height * gameAspectRatio;
+        } else {
+            // Conteneur plus haut que le jeu
+            width = maxWidth;
+            height = width / gameAspectRatio;
+        }
+
+        // Appliquer les dimensions au canevas
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+
+        // Mettre à jour la taille interne du canevas pour le rendu
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        // Notifier le jeu du redimensionnement si nécessaire
+        if (this.currentGame && typeof this.currentGame.onResize === 'function') {
+            this.currentGame.onResize(width, height);
+        }
     }
 
     closeGame() {
+        soundManager.playSound('click');
         if (this.currentGame) {
             this.currentGame.stop();
             this.currentGame = null;
         }
         this.gameContainer.style.display = 'none';
         document.body.style.overflow = 'auto';
-        document.getElementById('gameOverScreen').classList.add('hidden');
+        window.removeEventListener('resize', this.resizeGameCanvas.bind(this));
+        this.isPaused = false;
     }
 
     togglePause() {
         if (this.currentGame) {
-            if (this.currentGame.isRunning) {
-                this.currentGame.stop();
-                document.getElementById('pauseBtn').textContent = '▶️';
+            if (this.isPaused) {
+                this.resumeGame();
             } else {
-                this.currentGame.start();
-                document.getElementById('pauseBtn').textContent = '⏸️';
+                this.pauseGame();
             }
+        }
+    }
+
+    pauseGame() {
+        if (this.currentGame && !this.isPaused) {
+            if (this.currentGame.pause) {
+                this.currentGame.pause();
+            } else {
+                this.currentGame.stop();
+            }
+            this.isPaused = true;
+            this.pauseMenu.pauseGame();
+        }
+    }
+
+    resumeGame() {
+        if (this.currentGame && this.isPaused) {
+            if (this.currentGame.resume) {
+                this.currentGame.resume();
+            } else if (this.currentGame.start) {
+                this.currentGame.start();
+            }
+            this.isPaused = false;
+            this.pauseMenu.resumeGame();
         }
     }
 
@@ -408,7 +670,7 @@ class GameManager {
 
     initializeGame(gameId) {
         // Mapping des jeux avec leurs implémentations
-        switch(gameId) {
+        switch (gameId) {
             case 1: // Pac-Man
                 this.currentGame = new PacManGame('gameCanvas');
                 this.setInstructions('🕹️ Utilisez les flèches pour vous déplacer<br>🟡 Mangez tous les points<br>👻 Évitez les fantômes');
@@ -417,54 +679,25 @@ class GameManager {
                 this.currentGame = new SpaceInvadersGame('gameCanvas');
                 this.setInstructions('⬅️➡️ Flèches pour déplacer<br>ESPACE pour tirer<br>🛸 Détruisez tous les aliens');
                 break;
-            case 3: // Donkey Kong -> Snake (temporaire)
-                this.currentGame = new SnakeGame('gameCanvas');
-                this.setInstructions('🐍 Version simplifiée - Flèches pour diriger<br>🍎 Mangez les pommes<br>❌ Évitez les murs');
-                break;
-            case 4: // Tetris
+            case 3: // Tetris
                 this.currentGame = new TetrisGame('gameCanvas');
                 this.setInstructions('⬅️➡️ Flèches pour déplacer<br>⬇️ Flèche bas pour accélérer<br>⬆️ Flèche haut pour tourner');
                 break;
-            case 5: // Street Fighter II -> Pong
+            case 4: // Snake
+                this.currentGame = new SnakeGame('gameCanvas');
+                this.setInstructions('🐍 Flèches pour diriger<br>🍎 Mangez les pommes<br>❌ Évitez les murs et vous-même');
+                break;
+            case 5: // Pong
                 this.currentGame = new PongGame('gameCanvas');
-                this.setInstructions('🥊 Version combat simplifié<br>⬆️⬇️ Flèches pour contrôler<br>🏓 Premier à 5 points gagne');
+                this.setInstructions('🏓 Flèches pour bouger la raquette<br>⬆️⬇️ Premier à 5 points gagne');
                 break;
-            case 6: // Galaga -> Space Invaders
-                this.currentGame = new SpaceInvadersGame('gameCanvas');
-                this.setInstructions('🚀 Version Galaga simplifiée<br>⬅️➡️ Flèches + ESPACE<br>🛸 Détruisez les aliens');
-                break;
-            case 7: // Frogger -> Snake
-                this.currentGame = new SnakeGame('gameCanvas');
-                this.setInstructions('🐸 Version grenouille simplifiée<br>🕹️ Flèches pour naviguer<br>🎯 Évitez les obstacles');
-                break;
-            case 8: // Centipede -> Space Invaders
-                this.currentGame = new SpaceInvadersGame('gameCanvas');
-                this.setInstructions('🐛 Version Centipede<br>⬅️➡️ Déplacement + ESPACE<br>🎯 Visez le mille-pattes');
-                break;
-            case 9: // Asteroids -> Space Invaders
-                this.currentGame = new SpaceInvadersGame('gameCanvas');
-                this.setInstructions('🪨 Version Asteroids<br>⬅️➡️ Navigation + ESPACE<br>💥 Détruisez les astéroïdes');
-                break;
-            case 10: // Ms. Pac-Man
-                this.currentGame = new PacManGame('gameCanvas');
-                this.setInstructions('👩 Version Ms. Pac-Man<br>🕹️ Flèches pour bouger<br>🟡 Mangez tous les points');
-                break;
-            case 16: // Pole Position -> Snake (course simplifiée)
-                this.currentGame = new SnakeGame('gameCanvas');
-                this.setInstructions('🏎️ Course simplifiée<br>⬅️➡️ Dirigez votre véhicule<br>🏁 Évitez les obstacles');
-                break;
-            case 19: // Spy Hunter -> Snake
-                this.currentGame = new SnakeGame('gameCanvas');
-                this.setInstructions('🕵️ Mission d\'espion<br>🚗 Flèches pour conduire<br>🎯 Évitez les ennemis');
-                break;
-            case 23: // Out Run -> Snake
-                this.currentGame = new SnakeGame('gameCanvas');
-                this.setInstructions('🏎️ Course Out Run<br>⬅️➡️ Conduisez votre bolide<br>🌴 Évitez les obstacles');
+            case 6: // Breakout
+                this.currentGame = new BreakoutGame('gameCanvas');
+                this.setInstructions('🕹️ Souris ou flèches pour bouger<br>ESPACE pour lancer la balle<br>💥 Cassez toutes les briques');
                 break;
             default:
-                // Tous les autres jeux utilisent Snake par défaut
-                this.currentGame = new SnakeGame('gameCanvas');
-                this.setInstructions('🐍 Version simplifiée du jeu<br>🕹️ Flèches pour diriger<br>🍎 Collectez les objets');
+                console.error('Jeu non trouvé avec l\'ID:', gameId);
+                return;
         }
         
         if (this.currentGame) {
@@ -474,5 +707,21 @@ class GameManager {
     }
 }
 
-// Instance globale du gestionnaire de jeux
-window.gameManager = new GameManager();
+// Attendre que le DOM soit chargé avant de créer l'instance du gestionnaire de jeux
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        // Vérifier que toutes les dépendances sont chargées
+        if (window.visualEffects && window.soundManager && window.PauseMenu) {
+            window.gameManager = new GameManager();
+        } else {
+            console.error('Erreur: Toutes les dépendances ne sont pas chargées');
+        }
+    });
+} else {
+    // Le DOM est déjà chargé
+    if (window.visualEffects && window.soundManager && window.PauseMenu) {
+        window.gameManager = new GameManager();
+    } else {
+        console.error('Erreur: Toutes les dépendances ne sont pas chargées');
+    }
+}

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Suite - Arcade Games</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #111;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: #1a1a1a;
+        }
+        .test-result {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .pass { background: #004400; color: #00ff00; }
+        .fail { background: #440000; color: #ff0000; }
+        .pending { background: #444400; color: #ffff00; }
+        button {
+            background: #222;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover {
+            background: #333;
+        }
+        .log {
+            background: #000;
+            color: #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        h1, h2 { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎮 Suite de Tests - Arcade Games Platform</h1>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTests">0</div>
+                <div>Tests Total</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="passedTests">0</div>
+                <div>Tests Réussis</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failedTests">0</div>
+                <div>Tests Échoués</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successRate">0%</div>
+                <div>Taux de Réussite</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Contrôles de Test</h2>
+            <button onclick="runAllTests()">▶️ Lancer Tous les Tests</button>
+            <button onclick="runCoreTests()">🎯 Tests Core</button>
+            <button onclick="runFeatureTests()">✨ Tests Fonctionnalités</button>
+            <button onclick="runIntegrationTests()">🔗 Tests Intégration</button>
+            <button onclick="clearLog()">🗑️ Vider Log</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Résultats des Tests</h2>
+            <div id="testResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 Log des Tests</h2>
+            <div class="log" id="testLog"></div>
+        </div>
+    </div>
+
+    <!-- Load all required scripts -->
+    <script src="games-data.js"></script>
+    <script src="utils/notification-system.js"></script>
+    <script src="utils/high-score-system.js"></script>
+    <script src="utils/theme-system.js"></script>
+    <script src="utils/statistics-system.js"></script>
+    <script src="utils/achievement-system.js"></script>
+    <script src="utils/save-system.js"></script>
+    <script src="utils/controls-system.js"></script>
+    <script src="utils/replay-system.js"></script>
+    <script src="utils/screenshot-system.js"></script>
+    <script src="utils/multiplayer-system.js"></script>
+    <script src="utils/favorites-system.js"></script>
+    <script src="games/game-engine.js"></script>
+    <script src="games/pacman.js"></script>
+    <script src="games/space-invaders.js"></script>
+    <script src="games/snake.js"></script>
+    <script src="games/tetris.js"></script>
+    <script src="games/pong.js"></script>
+    <script src="games/breakout.js"></script>
+    <script src="games/asteroids.js"></script>
+    <script src="games/donkey-kong.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        // Test Suite Implementation
+        class TestSuite {
+            constructor() {
+                this.tests = [];
+                this.results = {
+                    total: 0,
+                    passed: 0,
+                    failed: 0
+                };
+                this.log = [];
+            }
+
+            addTest(name, testFn, category = 'general') {
+                this.tests.push({ name, testFn, category });
+            }
+
+            async runTest(test) {
+                this.logMessage(`🧪 Running: ${test.name}`);
+                try {
+                    const result = await test.testFn();
+                    if (result) {
+                        this.results.passed++;
+                        this.logMessage(`✅ PASS: ${test.name}`);
+                        return { name: test.name, status: 'pass', category: test.category };
+                    } else {
+                        this.results.failed++;
+                        this.logMessage(`❌ FAIL: ${test.name}`);
+                        return { name: test.name, status: 'fail', category: test.category };
+                    }
+                } catch (error) {
+                    this.results.failed++;
+                    this.logMessage(`❌ ERROR: ${test.name} - ${error.message}`);
+                    return { name: test.name, status: 'fail', category: test.category, error: error.message };
+                }
+            }
+
+            async runAllTests() {
+                this.results = { total: 0, passed: 0, failed: 0 };
+                this.logMessage('🚀 Starting comprehensive test suite...');
+                
+                const testResults = [];
+                for (const test of this.tests) {
+                    this.results.total++;
+                    const result = await this.runTest(test);
+                    testResults.push(result);
+                    await this.delay(100); // Small delay between tests
+                }
+
+                this.updateUI(testResults);
+                this.logMessage(`📊 Tests completed: ${this.results.passed}/${this.results.total} passed`);
+                return testResults;
+            }
+
+            async runTestsByCategory(category) {
+                const categoryTests = this.tests.filter(t => t.category === category);
+                this.logMessage(`🎯 Running ${category} tests (${categoryTests.length} tests)...`);
+                
+                const testResults = [];
+                for (const test of categoryTests) {
+                    const result = await this.runTest(test);
+                    testResults.push(result);
+                    await this.delay(100);
+                }
+
+                this.updateUI(testResults);
+                return testResults;
+            }
+
+            logMessage(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                this.log.push(`[${timestamp}] ${message}`);
+                this.updateLog();
+            }
+
+            updateLog() {
+                const logElement = document.getElementById('testLog');
+                logElement.innerHTML = this.log.slice(-50).join('\n');
+                logElement.scrollTop = logElement.scrollHeight;
+            }
+
+            updateUI(results) {
+                // Update stats
+                document.getElementById('totalTests').textContent = this.results.total;
+                document.getElementById('passedTests').textContent = this.results.passed;
+                document.getElementById('failedTests').textContent = this.results.failed;
+                const successRate = this.results.total > 0 ? Math.round((this.results.passed / this.results.total) * 100) : 0;
+                document.getElementById('successRate').textContent = successRate + '%';
+
+                // Update results display
+                const resultsContainer = document.getElementById('testResults');
+                resultsContainer.innerHTML = results.map(result => 
+                    `<div class="test-result ${result.status}">
+                        ${result.name} ${result.status === 'pass' ? '✅' : '❌'}
+                        ${result.error ? `<br><small>${result.error}</small>` : ''}
+                    </div>`
+                ).join('');
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // Initialize test suite
+        const testSuite = new TestSuite();
+
+        // Core System Tests
+        testSuite.addTest('Games Data Loading', () => {
+            return typeof gamesData !== 'undefined' && Array.isArray(gamesData) && gamesData.length === 8;
+        }, 'core');
+
+        testSuite.addTest('Game Engine Class', () => {
+            return typeof GameEngine === 'function';
+        }, 'core');
+
+        testSuite.addTest('Game Manager Instance', () => {
+            return typeof window.gameManager === 'object' && window.gameManager !== null;
+        }, 'core');
+
+        testSuite.addTest('All Game Classes Loaded', () => {
+            const gameClasses = ['PacManGame', 'SpaceInvadersGame', 'SnakeGame', 'TetrisGame', 
+                               'PongGame', 'BreakoutGame', 'AsteroidsGame', 'DonkeyKongGame'];
+            return gameClasses.every(className => typeof window[className] === 'function');
+        }, 'core');
+
+        // Feature Tests
+        testSuite.addTest('Notification System', () => {
+            return typeof NotificationSystem === 'function' && window.notifications;
+        }, 'features');
+
+        testSuite.addTest('High Score System', () => {
+            return typeof HighScoreSystem === 'function' && window.highScores;
+        }, 'features');
+
+        testSuite.addTest('Theme System', () => {
+            return typeof ThemeSystem === 'function' && window.themeSystem;
+        }, 'features');
+
+        testSuite.addTest('Statistics System', () => {
+            return typeof StatisticsSystem === 'function' && window.statistics;
+        }, 'features');
+
+        testSuite.addTest('Achievement System', () => {
+            return typeof AchievementSystem === 'function' && window.achievements;
+        }, 'features');
+
+        testSuite.addTest('Save System', () => {
+            return typeof SaveSystem === 'function' && window.saveSystem;
+        }, 'features');
+
+        testSuite.addTest('Controls System', () => {
+            return typeof ControlsSystem === 'function' && window.controlsSystem;
+        }, 'features');
+
+        testSuite.addTest('Replay System', () => {
+            return typeof ReplaySystem === 'function' && window.replaySystem;
+        }, 'features');
+
+        testSuite.addTest('Screenshot System', () => {
+            return typeof ScreenshotSystem === 'function' && window.screenshotSystem;
+        }, 'features');
+
+        testSuite.addTest('Multiplayer System', () => {
+            return typeof MultiplayerSystem === 'function' && window.multiplayerSystem;
+        }, 'features');
+
+        testSuite.addTest('Favorites System', () => {
+            return typeof FavoritesSystem === 'function' && window.favoritesSystem;
+        }, 'features');
+
+        // Integration Tests
+        testSuite.addTest('Game Data Integrity', () => {
+            return gamesData.every(game => 
+                game.id && game.name && game.genre && game.icon && 
+                game.description && game.difficulty && game.className
+            );
+        }, 'integration');
+
+        testSuite.addTest('LocalStorage Access', () => {
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }, 'integration');
+
+        testSuite.addTest('Canvas Support', () => {
+            const canvas = document.createElement('canvas');
+            return !!(canvas.getContext && canvas.getContext('2d'));
+        }, 'integration');
+
+        testSuite.addTest('Audio Context Support', () => {
+            return !!(window.AudioContext || window.webkitAudioContext);
+        }, 'integration');
+
+        testSuite.addTest('Fullscreen API Support', () => {
+            return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled || document.msFullscreenEnabled);
+        }, 'integration');
+
+        // UI Control Functions
+        function runAllTests() {
+            testSuite.runAllTests();
+        }
+
+        function runCoreTests() {
+            testSuite.runTestsByCategory('core');
+        }
+
+        function runFeatureTests() {
+            testSuite.runTestsByCategory('features');
+        }
+
+        function runIntegrationTests() {
+            testSuite.runTestsByCategory('integration');
+        }
+
+        function clearLog() {
+            testSuite.log = [];
+            testSuite.updateLog();
+        }
+
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            testSuite.logMessage('🎮 Test Suite initialized');
+            testSuite.logMessage('Click "▶️ Lancer Tous les Tests" to start testing');
+        });
+    </script>
+</body>
+</html>

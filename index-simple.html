@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade Games - Version Simple</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .game-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .game-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .game-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .game-description {
+            opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+
+        .play-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .play-btn:hover {
+            background: #45a049;
+        }
+
+        /* Modal de jeu */
+        .game-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+        }
+
+        .game-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-content {
+            background: #222;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        #gameCanvas {
+            border: 2px solid #fff;
+            background: #000;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 Arcade Games</h1>
+        <p>Version simplifiée - Choisissez votre jeu</p>
+    </div>
+
+    <div class="games-grid" id="gamesGrid">
+        <!-- Les jeux seront ajoutés ici par JavaScript -->
+    </div>
+
+    <!-- Modal de jeu -->
+    <div class="game-modal" id="gameModal">
+        <button class="close-btn" onclick="closeGame()">✕ Fermer</button>
+        <div class="game-content">
+            <h2 id="gameTitle">Jeu</h2>
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Données des jeux simplifiées
+        const games = [
+            { id: 1, name: "Pac-Man", icon: "🟡", description: "Le classique jeu de labyrinthe" },
+            { id: 2, name: "Space Invaders", icon: "👾", description: "Défendez la Terre contre les envahisseurs" },
+            { id: 3, name: "Tetris", icon: "🧩", description: "Empilez les blocs parfaitement" },
+            { id: 4, name: "Snake", icon: "🐍", description: "Mangez et grandissez sans vous mordre" }
+        ];
+
+        let currentGame = null;
+
+        // Initialisation simple
+        function init() {
+            console.log('🚀 Initialisation simple');
+            renderGames();
+        }
+
+        // Afficher les jeux
+        function renderGames() {
+            const grid = document.getElementById('gamesGrid');
+            grid.innerHTML = games.map(game => `
+                <div class="game-card" onclick="openGame(${game.id}, '${game.name}')">
+                    <div class="game-icon">${game.icon}</div>
+                    <div class="game-title">${game.name}</div>
+                    <div class="game-description">${game.description}</div>
+                    <button class="play-btn">▶ Jouer</button>
+                </div>
+            `).join('');
+        }
+
+        // Ouvrir un jeu
+        function openGame(gameId, gameName) {
+            console.log('🎮 Ouverture du jeu:', gameName);
+            
+            document.getElementById('gameTitle').textContent = gameName;
+            document.getElementById('gameModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            // Démarrer le jeu simple
+            startSimpleGame(gameId);
+        }
+
+        // Fermer le jeu
+        function closeGame() {
+            document.getElementById('gameModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+            
+            if (currentGame) {
+                currentGame.stop();
+                currentGame = null;
+            }
+        }
+
+        // Jeu simple de démonstration
+        function startSimpleGame(gameId) {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Nettoyer le canvas
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Afficher un message simple
+            ctx.fillStyle = '#fff';
+            ctx.font = '24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Jeu en cours de développement', canvas.width/2, canvas.height/2);
+            ctx.fillText('Appuyez sur Échap pour fermer', canvas.width/2, canvas.height/2 + 40);
+        }
+
+        // Gestion des touches
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeGame();
+            }
+        });
+
+        // Initialiser quand la page est chargée
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
